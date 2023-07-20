@@ -2,18 +2,27 @@
 import os
 import discord
 import os
+import discord_slash
 
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
 from discord_slash import SlashCommand, SlashContext
 
-#from discord_slash import SlashCommand
-
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 bot = commands.Bot(command_prefix="?", intents= discord.Intents.all())
+#slash = discord_slash.SlashCommand(bot, sync_commands=True) 
+
+class onOffConverter(commands.Converter):
+        async def convert (self, ctx, argument):
+                if argument.lower() =="on":
+                        return True
+                elif argument.lower()=="off":
+                        return False
+                else:
+                        raise commands.BadArgument("Invalid input. Please enter 'on' or 'off'.") 
 
 @bot.event
 async def on_message(message):
@@ -24,66 +33,57 @@ async def on_ready():
         print("bot is up")
         try:
                 synced = await bot.tree.sync()
-                print("synced")
+                print("synced cock")
         except Exception as e:
                 print(e)
 
+@bot.tree.command(name="mhiatus", description="Hiatus commands for Mods")
+@app_commands.describe(action="Type 'On' or 'Off' to enable or disable hiatus.")
+async def mhaitus(ctx: commands.Context, *, action: str):
+        modID = ctx.user.id
+        modRole = discord.utils.get(ctx.guild.roles, id=1131388396061855765)
+        hiatusRole = discord.utils.get(ctx.guild.roles, id=1131388455759396914)
+        if action.lower() == "on" and modRole in ctx.user.roles:
+        # Perform the 'on' action
+                await ctx.response.send_message(f"Hiatus is turned on for <@{modID}>", ephemeral = False)
+                await ctx.user.add_roles(hiatusRole)
+                await ctx.user.remove_roles(modRole)
+        elif action.lower() == "on" and hiatusRole in ctx.user.roles:
+                await ctx.response.send_message("Hiatus is already enabled, select 'off' to disable hiatus.", ephemeral = True)
 
-class onOff(commands.Converter):
-        async def convert (self, ctx, argument):
-                if argument.lower() =="on":
-                        return True
-                elif argument.lower()=="off":
-                        return False
-                else:
-                        raise commands.BadArgument("Invalid input. Please enter 'on' or 'off'.")              
-                        
+        elif action.lower() == "off" and hiatusRole in ctx.user.roles:
+        # Perform the 'off' action
+                await ctx.response.send_message(f"Hiatus is turned off for <@{modID}>", ephemeral = False)
+                await ctx.user.add_roles(modRole)
+                await ctx.user.remove_roles(hiatusRole)
+        elif action.lower() == "off" and modRole in ctx.user.roles:
+                await ctx.response.send_message("Hiatus is already off, select 'on' to disable hiatus.", ephemeral = True)
+                
+        elif action.lower() == "off" or action.lower() == "on":
+                await ctx.response.send_message("This command is for moderators only.", ephemeral = True)
+                
+        else:
+                await ctx.response.send_message("Please enter 'On' or 'Off' for hiatus options.", ephemeral = True)
 
+@mhaitus.error
+async def mhaitus_error(ctx, error):
+    if isinstance(error, commands.BadArgument):
+        await ctx.response.send_message(error, ephemeral=True)
 
-
-@slash.slash(name="mhiatus", description="Hiatus commands for Mods")
-async def mhaitus(ctx: SlashContext, option: YesOrNoConverter):
-        modID = interaction.user.id
-        onHiatusRoleID = discord.utils.get(ctx.guild.roles, id=ENTERID)
-        modRoleID = discord.utils.get(ctx.guild.roles, id=ENTERID)
         
-        if option and modRoleID in user.roles:
-                await interaction.response.send_Message(f"Mod <@{modID}> is going on Hiatus.")
-        elif option and onHiatusRoleID in user.roles:
-                await interaction.response.send_Message(f"Error: You already are on Hiatus. Try using the parameter off instead.")
-        
-
-        if not option and modRoleID in user.roles:
-                await interaction.response.send_Message(f"Mod <@{modID}> is going off Hiatus.")
-        elif not option and onHiatusRoleID in user.roles:
-                await interaction.response.send_Message(f"Error: You already are off Hiatus. Try using the parameter on instead.")
-
-
-
 @bot.tree.command(name="hello", description="Hi")
 async def hello(interaction: discord.Interaction):
         await interaction.response.send_message("sup")
 
 @bot.tree.command(name="trade", description="This command is to set up a trade thread with another user.")
-@bot.tree.describe(
-tradeUser="The User you want to trade with."
-
-
-)
-
-async def trade(
-        interaction:discord.Interaction,
-        tradeUser:discord.Member,               
-                ):
-        
-
-        await interaction.response.send_message("Trade being set up...", ephemeral = True)
-        channel = bot.get_channel(int(912552302764765206))
+async def trade(ctx: commands.Context, target: discord.Member):
+        initiator = ctx.user.id
+        participant = target.id
+        await ctx.response.send_message("Trade being set up...", ephemeral = True)
+        channel = bot.get_channel(int(1131393762413793443))
         print("Channel created")
-        thread = await channel.create_thread(name="testthread")
-        
-        await thread.send("This is an example message")
-        await thread.send(f"User <@{interaction.user.id}> set up a trade with <@{interaction.user.id}>!")
+        thread = await channel.create_thread(name="active-trade")
+        await thread.send(f"<@{initiator}> started a trade with <@{participant}>!")
         
 
 bot.run(DISCORD_TOKEN)
