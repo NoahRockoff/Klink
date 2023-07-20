@@ -1,28 +1,15 @@
-# bot.py
 import os
 import discord
 import os
-import discord_slash
 
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
-from discord_slash import SlashCommand, SlashContext
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 bot = commands.Bot(command_prefix="?", intents= discord.Intents.all())
-#slash = discord_slash.SlashCommand(bot, sync_commands=True) 
-
-class onOffConverter(commands.Converter):
-        async def convert (self, ctx, argument):
-                if argument.lower() =="on":
-                        return True
-                elif argument.lower()=="off":
-                        return False
-                else:
-                        raise commands.BadArgument("Invalid input. Please enter 'on' or 'off'.") 
 
 @bot.event
 async def on_message(message):
@@ -33,7 +20,7 @@ async def on_ready():
         print("bot is up")
         try:
                 synced = await bot.tree.sync()
-                print("synced cock")
+                print("synced")
         except Exception as e:
                 print(e)
 
