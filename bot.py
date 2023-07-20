@@ -52,6 +52,14 @@ async def mhaitus(ctx: commands.Context, *, action: str):
         else:
                 await ctx.response.send_message("Please enter 'On' or 'Off' for hiatus options.", ephemeral = True)
 
+@bot.tree.command(name="say", description="Echo")
+async def say(ctx:commands.Context, channel: discord.TextChannel, content: str):
+        await ctx.channel.send_message(f"{content}")
+        
+
+
+
+
 @mhaitus.error
 async def mhaitus_error(ctx, error):
     if isinstance(error, commands.BadArgument):
